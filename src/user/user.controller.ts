@@ -8,41 +8,38 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post('/create')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    return { id: (await this.userService.create(createUserDto)).id }
   }
 
   @Get('/get')
-  findAll(
+  async findAll(
     @Query('role') role?: string,
     @Query('full_name') full_name?: string,
-    @Query('efficiency', ParseIntPipe) efficiency?: number,
+    @Query('efficiency', new ParseIntPipe({ optional: true })) efficiency?: number,
   ) {
-    return this.userService.findAll(role, full_name, efficiency);
+    const users = await this.userService.findAll(role, full_name, efficiency);
+    return { users }
   }
 
-  // @Get('/get/:id')
-  // findOne(@Param('id') id: string) {
-  //   try {
-  //     return this.userService.findOne(+id);
-  //   }
-  //   catch (e) {
-  //     return new HttpException(`there is no user with id = ${id}`, HttpStatus.NOT_FOUND)
-  //   }
-  // }
+  @Get('/get/:id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.userService.findOne(id);
+    return { users: [user] }
+  }
 
   @Patch('/update/:id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(id, updateUserDto);
   }
 
-  @Delete('/delete')
+  @Delete('/delete/')
   async removeAll() {
     await this.userService.removeAll();
   }
 
   @Delete('/delete/:id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.remove(id);
   }
 }

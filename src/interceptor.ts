@@ -6,7 +6,7 @@ import {
     CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
@@ -18,14 +18,11 @@ export class ResponseInterceptor implements NestInterceptor {
                     if (value === undefined) {
                         return { success: true }
                     }
-                    if (value['message'] !== undefined) {
-                        return { success: false, result: { error: value.message } }
-                    }
-                    if (value !== undefined) {
-                        return { success: true, result: value };
-                    }
+                    return { success: true, result: value }
                 }),
+                catchError(async (err: any, caught: Observable<any>) => {
+                    return { success: false, result: { error: err.response || err.meta.cause } }
+                })
             )
-
     }
 }
